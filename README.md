@@ -36,3 +36,50 @@ public Map<String, Object> getParams(HttpServletRequest request) {
 		params.put("session_user_ip", RequestUtil.getIpAddr(request));
 		return params;
 	}
+
+
+
+@RequestMapping(value = "/pair") 
+@ResponseBody 
+public ResponseData pair(String rows, String group_name, String group_id, HttpServletRequest request) { 
+User user = (User) SecurityContextUtil.getCurrentUser(); 
+if (user == null) { 
+user = (User) request.getSession().getAttribute(Constants.USER_OS); 
+} 
+Gson gson = new Gson(); 
+List<SectionGroup> list = gson.fromJson(rows, new TypeToken<List<SectionGroup>>() {}.getType()); 
+for (SectionGroup sectionGroup : list) { 
+sectionGroup.setRegion(user.getRegion_id()); 
+sectionGroup.setCompany_id(user.getOrg_id()); 
+sectionGroup.setGroup_id(group_id); 
+sectionGroup.setGroup_name(group_name); 
+service.insertEntity(sectionGroup); 
+} 
+return ResponseData.SUCCESS_NO_DATA; 
+} 
+	
+	
+	
+	var rows = $('#dg1').datagrid('getSelections'); 
+$.ajax({ 
+cache : false, 
+type : "POST", 
+url : _basePath + '/sectionGroup/pair', 
+data : {rows : JSON.stringify(rows), group_id : group_id, group_name : group_name}, 
+success : function(data) { 
+if(data.success == true){ 
+$.messager.confirm('配置成功','是否刷新列表？', function(r){ 
+if (r){ 
+$('#dg').datagrid('reload'); 
+$('#dg1').datagrid('reload'); 
+$('#dg2').datagrid('reload'); 
+} 
+}); 
+}else{ 
+$.messager.show({ 
+title:'提示',msg:'配置失败', 
+showType:'fade',style:{right:'',bottom:''} 
+}); 
+} 
+} 
+}); 
